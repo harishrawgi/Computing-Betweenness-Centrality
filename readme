@@ -1,0 +1,172 @@
+-----------------------------------Implementation for Betweenness Centrality Calculation--------------------------------------------------------------
+
+Part of IISc E0 251 DSA course
+Developed towards the fulfilment of Assignment 3 of the mentioned course
+
+Developed by: Hari Shrawgi
+
+Language: C, Python
+Libraries Used (C): stdlib, stdio, time
+Libraries Used (Python): numpy, matplotlib, networkx
+
+-----------------------------------Implementation for Betweenness Centrality Calculation--------------------------------------------------------------
+
+1. Basic Introduction
+----------------------
+
+All the src code has been written to implement Betweenness Centrality calculations for "unweighted" and "undirected" graphs.
+Two algorithms for calculating BC values have been implemented. One relies on Floyd-Warshall algorithm and the other on BFS traversal.
+
+We compare both the algorithms on random graphs generated using Erdos-Renyi graph generator. The graph generation and analysis of algorithms
+have been done on python. Whereas BC calculations are done solely in C.
+
+2. Salient Features
+--------------------
+
+General features:
+
+- The implementation tries to be as modular and abstract as possible
+- The different modules are very loosely coupled
+- There is an option to choose whether the BC values should be normalized or not
+- The graph implementation is specific to BC computation and it has a BC array in the structure itself.
+  This allows the graph to be passed on along with teh BC values as most networking algorithms require BC values
+- The adjacency list, predecessor list, stack and queue implementations are all completely de-coupled with teh graph implementation
+
+This implementation using BFS has the following features:
+
+- The BFS implementation is much faster compared to Floyd-Warshall for sparse graph
+- This implementation doesn't explicitly calculate number of shortest paths but directly calculates BC values during BFS traversals
+- The algorithm has a time complexity a little more than O(|V|^2) for sparse graphs, which is much faster compared to FW
+- Basically the algorithm uses a modified version of BFS traversal |V| times to complete the BC computation
+
+This implementation using Floyd-Warshall has the following features:
+
+- The code optimizes time complexity as much as possible
+- The main idea to optimize time was to use the symmetric property of adjacency matrix to optimize Floyd-Warshall
+- We completely ignore the lower triangular part of the adjacency matrix in order to save time
+- But we do use the full adjacency matrix (which sacrifices some memory), this makes sure that the access time for matrix entries
+  doesn't increase. It would increase if we use special indexing and store the symmetric matrix in a single array.
+- The code uses heap memory almost everywhere and it handles the allocation and de-allocation gracefully
+- Floyd-Warshall implementation is easier to understand and implement but gives a time complexity of O(|v|^3)
+
+
+3. Code description
+--------------------
+
+The src code is divided into seven components:
+
+A. Graph: This is the only component that is visible to the client(main). It has only the relevant functions like reading the graph from file,
+          two functions for the BC computations and a normalization function. Nothing else is revealed to the client.
+
+          This component defines the basic structure for graph. This component heavily relies on the
+          Graph helper module which is not visible to client.
+
+B. Main:  This component acts as the client side and it asks for mainly 4 inputs.
+          1. Number of vertices: This represents the number of vertices.
+          2. Choice of graph: The implementation supports two types of graph. One is the ER random graph which has vertex id starting from 0
+          and has no weights. The other is of the sample Cornell type graph. It has vertex id starting form 1 and has weights.
+          Note that the implementation ignores the weights completely.
+          3. Choice of normalization: 1 or 0, to decide whether to normalize or not.
+          4. File: This is for the file name with fully qualified path where the graph is stored
+
+C. Graph Helper:  This component has the crux of the code. Here the two algorithms are implemented for BC calulations.
+                  Plus, all other functions required by the graph module which is not to be revealed to the client are
+                  also implemented here.
+
+D. Adjacency List:  This component is for defining adn implementing the structure for the Adjacency List
+                    representation of the graph. We use this implementation even in our main graph structure.
+
+E. Adjacency Matrix:  This component handles the adjacency matrix representation of a graph.
+                      It is only used for Floyd-Warshall implementation.
+
+F. Predecessor List:  This component is for defining and implementing the predecessor list structure.
+                      It is used in the BFS implementation.
+
+G. Queue: This is a general implementation of a Queue.
+
+H. Stack: This is a general implementation of a Stack.
+
+4. Python component
+--------------------
+
+Python and specifically networkx library has been used to implement the graph generation using Erdos-Renyi generators.
+
+To run the python scripts you may need to install the three Libraries. The command for them is as follows using pip:
+  pip install matplotlib
+  pip install numpy
+  pip install networkx
+
+There are two jupyter notebooks in the python component. Their description is as follows.
+
+A. ER Graph Generation: This notebook handles the graph generation and saving the graph to a text file part.
+                        Here we have set-up two probability values (it is a parameter for ER graph generator),
+                        Both values ensures that a giant component is present. Plus, we can use them to generate graphs
+                        of varying sparsity and number of vertices.
+
+B. Complexity Analysis: This notebook handles the plotting of analysis plots which compare the two implementations of BC calulations
+                        with varying sparsity as well as number of vertices. It uses the Matplotlib library of python for plotting.
+
+                        The analysis part also normalizes the execution times in order to compare the two algorithms.
+
+4. Analysis of the two implementations
+---------------------------------------
+
+The analysis of the two implementations has been done in multiple ways.
+
+A. Execution Time v/s Number of vertices: Here, the analysis compares the execution time of the two algorithms as the number of
+                                          vertices in a graph grows. For this analysis the density of the graph is kept almost constant.
+                                          This is achieved by generating graphs with constant v*p value at 2.
+                                          The execution times are also normalized so as to compare the two algorithms.
+
+B. Execution Time v/s Number of edges:    Here, the analysis compares the execution time of the two algorithms as the number of
+                                          edges grows. The number of vertices in the graph has been kept constant for this at 6k.
+                                          The number of edges are varied in the graph
+                                          by varying the p parameter (explained in the python notebook).
+
+C. Memory Usage analysis: How much overall memory is used by both implementations has also been analysed with both varying
+                          number of edges and vertices in the graph.
+
+
+5. Testing
+----------
+
+Thorough testing has been performed. With several large graphs and as well as with the sample Cornell graph.
+All the logs from testing is provided along with the code. The execution time and memory are also present in the logs.
+For analysis, these execution metrics are also supplied as different text files, which can be used in python to plot various graphs.
+The general graphs have already been provided after testing.
+
+The graphs and their output files have special naming convention as follows,
+
+Input graph file: "ERGraph_n1_Giant_n2_n3"
+                  n1: number of vertices in the original graph from which this giant component is taken
+                  n2: number of vertices in this giant component
+                  n3: number of edges in this giant component
+
+Output file: "ERGraph_n1_Giant_n2_n3_output"
+              n1,n2,n3 mean the same as above
+
+BC Values from networkx: "bc_values_ERGraph_n1_Giant_n2_n3"
+                          n1,n2,n3 mean the same as above
+                          This file has the BC values computed using networkx librrary from Python
+
+Pointers for testing:
+It is suggested to always redirect the output of a.out on to a file, because for large graphs there would be a lot of BC values.
+Also you can create input files as follows and redirect the input from this type of file,
+
+Input file format
+------------
+<n1>
+<ch1>
+<ch2>
+<filename>
+
+
+6. Points to be noted
+----------------------
+
+- The code only works for graphs in a specific format (as specified by the python graph generation script).
+- You can use any graph for testing as long as it follows the two possible formats.
+- The implementation suffers from floating point imprecision. Thus for large graphs, the BC values for two algorithms differ.
+- There is a limit defined for the length of file name. It can be increased if need through main.c file.
+
+------------------------------------------------------X---------------------------------------------x------------------------------------------
